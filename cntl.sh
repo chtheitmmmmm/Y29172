@@ -1,0 +1,1 @@
+cat `find ./project | grep '\.[ch]$'` | wc -l

@@ -4,9 +4,6 @@
 #include "event/event.h"
 #include "run/run.h"
 
-extern Config config;
-extern GlobalEvents global_events;
-
 int main(int argc, const char ** argv) {
     InitResult init_result = init(argc, argv);
     if (result_is_ok(init_result)) {
@@ -14,15 +11,18 @@ int main(int argc, const char ** argv) {
         run();
     } else {
         switch (result_unwrap(init_result)) {
-            case InitResultErrorInitEventHeap:
-                event2_print_log(EVENT_LOG_ERR, "event init heap cannot alloc.");
+            case InitResultErrInitEventHeap:
+                event2_print_log(EVENT_LOG_ERR, "事件初始化失败（可能因为堆内存不足）.");
                 break;
-            case InitResultErrorInitEventOther:
-                event2_print_log(EVENT_LOG_ERR, "event init error.");
+            case InitResultErrInitEventOther:
+                event2_print_log(EVENT_LOG_ERR, "事件初始化失败。");
                 break;
-            case InitResultOther:
+            case InitResultErrVictimOther:
+                event2_print_log(EVENT_LOG_ERR, "受害者表初始化失败、");
+                break;
+            case InitResultErrOther:
             default:
-                event2_print_log(EVENT_LOG_ERR, "init error.");
+                event2_print_log(EVENT_LOG_ERR, "初始化失败。");
                 break;
         }
     }

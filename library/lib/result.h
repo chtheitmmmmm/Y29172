@@ -39,4 +39,9 @@
     result.payload.reason = res;\
 }
 
+#define result_turn_ok(result, v) { \
+    result.type = RESULT_OK;          \
+    result.payload.value = v;\
+}
+
 #endif //SERVER_RESULT_H

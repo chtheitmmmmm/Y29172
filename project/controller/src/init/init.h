@@ -7,8 +7,10 @@
 #include <lib/result.h>
 
 enum InitResultErrCode {
-    InitResultConfigErr,
     InitResultErrOther,
+    InitResultErrConfig,
+    InitResultErrHio,
+    InitResultErrAccount,
 };
 
 typedef Result(enum InitResultErrCode, int) InitResult;

@@ -7,6 +7,7 @@
 #include "../util/printlog.h"
 #include "../quit/quit.h"
 #include "../core/server.h"
+#include "../core/session.h"
 #include <pthread.h>
 
 GlobalEvents global_events = {
@@ -17,6 +18,7 @@ GlobalEvents global_events = {
 
 static void init_event_cb(int, short, void *);  // called when init_event triggered
 static void sigint_event_cb(int, short, void *); // called when receive a SIGINT signal
+static void session_establish_event_cb(int, short, void *); // called when session established.
 
 void global_event_loop() {
     event_base_loop(global_events.event_base, EVLOOP_NO_EXIT_ON_EMPTY);
@@ -42,9 +44,8 @@ EventsInitResult global_events_init() {
         result_turn_err(res, EventsInitErrorHeap);  // 分配 sigint_event 失败
         return res;
     }
-    pthread_mutex_init(&global_events.lock, NULL);  // 初始化互斥锁
-    event_add(global_events.init_event, NULL);          // 添加 init_event
-    event_add(global_events.sigint_event, NULL);        // 添加 sigint_event
+    pthread_mutex_init(&global_events.lock, NULL);      // 初始化互斥锁
+    event_add(global_events.sigint_event, NULL);            // 添加 sigint_event
     return res;
 }
 
@@ -55,8 +56,9 @@ void global_events_trigger_init_event() {
 // 执行清理工作
 void global_events_quit() {
     pthread_mutex_lock(&global_events.lock);
-    event_free(global_events.init_event);
     event_base_loopbreak(global_events.event_base);
+    event_free(global_events.init_event);
+    event_free(global_events.sigint_event);
     event_base_free(global_events.event_base);
     pthread_mutex_unlock(&global_events.lock);
     pthread_mutex_destroy(&global_events.lock);

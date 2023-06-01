@@ -4,13 +4,17 @@
 
 #include "init.h"
 #include "../config/config.h"
-#include <stdio.h>
+#include "../hios/hios.h"
 #include <hv/hloop.h>
-#include <event2/event.h>
 #include <argparse/argparse.h>
+#include "../account/account.h"
 
 static const char * sip_str = NULL;
 static const char * sport_str = NULL;
+
+extern hio_t * sockio;
+extern hio_t * stdinio;
+
 static struct argparse_option options[] = {
     OPT_HELP(),
     OPT_GROUP("basic options"),
@@ -23,6 +27,16 @@ static const char *const usages[] = {
     NULL,
 };
 static struct argparse argparse;
+
+InitResult init_account() {
+    InitResult res = result_new_ok(0);
+    AccountInitResult account_init_result = account_init();
+    if (result_is_err(account_init_result)) {
+        result_turn_err(res, InitResultErrAccount);
+        return res;
+    }
+    return res;
+}
 
 InitResult init_config() {
     InitResult res = result_new_ok(0);
@@ -39,7 +53,21 @@ InitResult init_config() {
         switch (result_unwrap(config_result)) {
             case ConfigInitErrorOther:
             default:
-                result_turn_err(res, InitResultConfigErr);
+                result_turn_err(res, InitResultErrConfig);
+                break;
+        }
+    }
+    return res;
+}
+
+InitResult init_hio() {
+    HioInitResult hio_init_res = hios_init();
+    InitResult res = result_new_ok(0);
+    if (result_is_err(hio_init_res)) {
+        switch (result_unwrap(hio_init_res)) {
+            case HioInitErrOther:
+            default:
+                result_turn_err(res, InitResultErrHio);
                 break;
         }
     }
@@ -55,6 +83,17 @@ InitResult init(int argc, const char ** argv) {
     if (result_is_err(result)) {
         return result;
     }
+
+    result = init_account();
+    if (result_is_err(result)) {
+        return result;
+    }
+
+    result = init_hio();
+    if (result_is_err(result)) {
+        return result;
+    }
+
     return result;
 }
 

@@ -7,16 +7,17 @@
 void event2_print_log(int severity, const char * msg) {
     print_log("");
     switch (severity) {
-        case EVENT_LOG_MSG:
-            break;
         case EVENT_LOG_WARN:
-            printf(CHALK_BG_YELLOW("WARN "));
+            printf(CHALK_BLUE(CHALK_BG_YELLOW("WARN"))" ");
             break;
         case EVENT_LOG_ERR:
-            printf(CHALK_BG_RED("ERR "));
+            printf(CHALK_BLUE(CHALK_BG_RED("ERR"))" ");
             break;
         case EVENT_LOG_DEBUG:
-            printf(CHALK_BG_LIGHT_BLACK("DB "));
+            printf(CHALK_BG_LIGHT_BLACK("DB")" ");
+        case EVENT_LOG_MSG:
+        default:
+            break;
     }
     printf("%s\n", msg);
 }

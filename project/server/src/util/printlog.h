@@ -9,6 +9,9 @@
 #include <chalk.c/chalk.h>
 #include <event2/event.h>
 
+#define SUCCESSFULLY CHALK_GREEN("successfully")
+#define FAILED       CHALK_RED("failed")
+
 static const char * format = "%Y-%m-%d %H:%M:%S";
 static char buffer[4 + 1 + 2 + 1 + 2 + 1 + 2 + 1 + 2 + 1 + 2 + 1];
 
@@ -16,7 +19,7 @@ static char buffer[4 + 1 + 2 + 1 + 2 + 1 + 2 + 1 + 2 + 1 + 2 + 1];
 #define print_log(...) { \
     time_t t = time(NULL);                                                \
     strftime(buffer, sizeof(buffer), format, localtime(&t));              \
-    printf(CHALK_YELLOW("%s") " - ["CHALK_GREEN("server")"] - ", buffer); \
+    printf(CHALK_LIGHT_BLACK("%s "), buffer); \
     printf(__VA_ARGS__);    \
 }
 

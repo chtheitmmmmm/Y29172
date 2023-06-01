@@ -38,7 +38,7 @@
 
 // turn option to option_type_none
 #define option_turn_none(option) {       \
-    option.type = OPTION_TYPE_NONE       \
+    option.type = OPTION_TYPE_NONE;       \
 }
 
 #endif //SERVER_OPTION_H

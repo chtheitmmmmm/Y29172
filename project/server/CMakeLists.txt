@@ -5,4 +5,4 @@ project(server
 file(GLOB_RECURSE SRC ${PROJECT_PROJECT_DIR}/server/src/*.c)
 
 add_executable(server ${SRC} ${LIBRARY_SRC})
-target_link_libraries(server PRIVATE hv_static event) # libevent linkage
+target_link_libraries(server PRIVATE hv_static event ssl) # library linkage

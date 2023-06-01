@@ -2,38 +2,40 @@
 #include <hv/hloop.h>
 #include "init/init.h"
 #include "config/config.h"
+#include "hios/hios.h"
 #include <chalk.c/chalk.h>
+#include <signal.h>
 
-void on_connect() {
-    printf("Connection installed\n");
-}
-
-void on_close() {
-    printf("Connection closed\n");
+static void on_sigint() {
+    hio_close(sockio);
+    exit(0);
 }
 
 int main(int argc, const char ** argv) {
-    hloop_t * hloop = hloop_new(0);
     InitResult result = init(argc, argv);
     if (result_is_err(result)) {
         switch (result_unwrap(result)) {
-            case InitResultConfigErr:
-                printf(CHALK_RED("Config init error!\n"));
+            case InitResultErrAccount:
+                printf(CHALK_RED("初始化账号失败！\n"));
+                break;
+            case InitResultErrConfig:
+                printf(CHALK_RED("配置初始化失败！\n"));
+                break;
+            case InitResultErrHio:
+                printf(CHALK_RED("套接字初始化失败！\n"));
                 break;
             case InitResultErrOther:
             default:
-                printf(CHALK_RED("Init error!\n"));
+                printf(CHALK_RED("初始化失败！\n"));
                 break;
         }
         return 1;
     }
-    if (!hloop) {
-        printf(CHALK_RED("Error when new a hloop!\n"));
-        exit(1);
-    }
     config_report();
-    printf("Connecting to the server...\n");
-    hloop_create_ssl_client(hloop, config.server_ip, config.server_port, on_connect, NULL);
+
+    signal(SIGINT, on_sigint);
+    printf("正在连接服务器...\n");
     hloop_run(hloop);
+    hloop_free(&hloop);
     return 0;
 }

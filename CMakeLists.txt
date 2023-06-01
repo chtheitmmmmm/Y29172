@@ -14,7 +14,9 @@ include_directories(library/libhv/include) # libhv
 
 set(LIB_ARGPARSE_SRC ${PROJECT_LIBRARY_DIR}/argparse/argparse.c)
 set(LIB_SHA256_SRC ${PROJECT_LIBRARY_DIR}/SHA256/sha256.c)
-set(LIBRARY_SRC ${LIB_ARGPARSE_SRC} ${LIB_SHA256_SRC} ${LIB_CTIMESTAMP_SRC})
+file(GLOB LIB_LIB_SRC ${PROJECT_LIBRARY_DIR}/lib/*.c)
+set(PROTOCOL_SRC ${PROJECT_LIBRARY_DIR}/protocol/protocol.c)
+set(LIBRARY_SRC ${LIB_ARGPARSE_SRC} ${LIB_SHA256_SRC} ${LIB_CTIMESTAMP_SRC} ${PROTOCOL_SRC} ${LIB_LIB_SRC})
 
 link_directories(${PROJECT_LIBRARY_DIR}/libhv/build/lib/) # link libhv
 

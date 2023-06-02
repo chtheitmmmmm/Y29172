@@ -1,6 +1,6 @@
-//
-// Created by cmtheit on 23-5-26.
-//
+
+
+
 
 #ifndef SERVER_SERVER_H
 #define SERVER_SERVER_H
@@ -26,6 +26,7 @@ enum ServerInitErrCode {
     ServerInitErrSSLServerCreate,
     ServerInitErrSSLCtx,
     ServerInitErrConfig,
+    ServerInitGetIP
 };
 typedef Result(enum ServerInitErrCode, int) ServerInitResult;
 

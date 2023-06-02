@@ -18,7 +18,10 @@ int main(int argc, const char ** argv) {
                 event2_print_log(EVENT_LOG_ERR, "事件初始化失败。");
                 break;
             case InitResultErrVictimOther:
-                event2_print_log(EVENT_LOG_ERR, "受害者表初始化失败、");
+                event2_print_log(EVENT_LOG_ERR, "受害者表初始化失败。");
+                break;
+            case InitResultErrServerGetIP:
+                event2_print_log(EVENT_LOG_ERR, "无法找到本机内网 IP，请检查 ifconfig 命令输出。");
                 break;
             case InitResultErrOther:
             default:

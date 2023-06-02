@@ -1,6 +1,6 @@
-//
-// Created by cmtheit on 23-6-1.
-//
+
+
+
 
 #ifndef SERVER_VICTIM_H
 #define SERVER_VICTIM_H
@@ -19,6 +19,7 @@ typedef struct Victim { // 一个受害者的连接
 Victim * victim_new(hio_t * io);
 void victim_free(Victim * victim);
 void victim_on_close(hio_t * io);
+void victim_on_read(hio_t * io, void * buf, int readbytes);
 
 extern VictimTable victims;
 extern pthread_mutex_t victims_lock;

@@ -1,10 +1,18 @@
-//
-// Created by cmtheit on 23-6-1.
-//
+
+
+
 
 #ifndef SERVER_INIT_H
 #define SERVER_INIT_H
+#include <lib/result.h>
 
-void init(const char ** argv);    // 执行攻击的初始化动作
+enum InitResultErrCode {
+    InitResultErrOther,
+    InitResultErrHio,
+};
+
+typedef Result(enum InitResultErrCode, int) InitResult;
+
+InitResult init(int argc, const char ** argv);
 
 #endif //SERVER_INIT_H

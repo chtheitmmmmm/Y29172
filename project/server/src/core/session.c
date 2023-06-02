@@ -1,7 +1,3 @@
-//
-// Created by cmtheit on 23-5-31.
-//
-
 #include "session.h"
 #include "../util/printlog.h"
 #include "../util/string.h"
@@ -70,7 +66,7 @@ SessionEstablishResult session_establish(hio_t * io) {  // 尝试创建一个会
 }
 
 static void session_on_close(hio_t *) {    // 关闭会话的清理工作
-    event2_print_log(EVENT_LOG_MSG, "会话关闭");
+    event2_print_log(EVENT_LOG_MSG, "-- 主控端会话关闭 --");
     session_reset();
 }
 
@@ -107,8 +103,8 @@ static void session_on_read(hio_t *, void * buf, int readbytes) {    // 从控�
             if (readbytes > 1) {
                 print_logl("接收命令: " CHALK_YELLOW("%.*s"), readbytes - 1, (char *)buf);
                 *(char*)(buf + readbytes - 1) = '\0';
-                char ** argv = split((char*)buf, ' ');
-                cmd_exe(buf, strings_len(argv), argv);
+                char ** argv = split((char*)buf);
+                cmd_exe(argv[0], strings_len(argv) - 1, argv + 1);
                 strings_free(argv);
             }
             break;

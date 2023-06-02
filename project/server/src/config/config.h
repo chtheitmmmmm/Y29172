@@ -1,12 +1,11 @@
-//
-// Created by cmtheit on 23-5-26.
-//
+
+
+
 
 #ifndef SERVER_CONFIG_H
 #define SERVER_CONFIG_H
 
 #include <protocol/protocol.h>
-#include <libnet.h>
 #include <lib/option.h>
 #include <lib/result.h>
 #include <SHA256/sha256.h>
@@ -16,7 +15,6 @@
 #define CONFIG_DEFAULT_UNAME USER_NAME_DEFAULT
 #define CONFIG_DEFAULT_PSW USER_PSW_DEFAULT
 
-
 typedef uint16_t port_t;
 
 typedef struct Config {
@@ -25,7 +23,6 @@ typedef struct Config {
     const char * uname;   // 用户名
     uint8_t pswsha[SHA256_SIZE_BYTES];  // 密码的 sha256 编码
 } Config;
-
 
 enum ConfigInitErrCode {
     ConfigInitErrorOther

@@ -1,17 +1,19 @@
-//
-// Created by cmtheit on 23-6-1.
-//
+
+
+
 
 #include "string.h"
-#include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <ctype.h>
+#include <limits.h>
 
-char ** split(char * string, char delimiter) {
+
+
+char ** split(char * string) {
     size_t seg_num = 1;
     size_t tot = strlen(string);
     for (size_t i = 0; i < tot; ++i) {
-        if (string[i] == delimiter)
+        if (isspace(string[i]))
             seg_num++;
     }
     char ** ctn = calloc(seg_num + 1, sizeof(char*));
@@ -21,7 +23,7 @@ char ** split(char * string, char delimiter) {
     size_t idx = 0;
     ctn[0] = malloc((tot + 1) * sizeof (char));
     for (size_t i = 0, l = 0; i < tot; ++i) {
-        if (string[i] == delimiter) {
+        if (isspace(string[i])) {
             ctn[idx] = realloc(ctn[idx], (l + 1) * sizeof(char));
             if (!ctn[idx]) {
                 for (int j = 0; j < idx; ++j) {
@@ -67,4 +69,28 @@ void strings_free(char ** strings) {
         strings++;
     }
     free(head);
+}
+
+MyAtoiResult myatoi(const char * src) {
+    MyAtoiResult res = result_new_err(0);
+    if (src) {
+        int buf = 0;
+        while (*src) {
+            if (isdigit(*src)) {
+                if (buf < INT_MAX * 1.0 / 10) {
+                    buf *= 10;
+                    buf += *src - '0';
+                } else {
+                    break;
+                }
+                src++;
+            } else {
+                break;
+            }
+        }
+        if (!*src) {
+            result_turn_ok(res, buf);
+        }
+    }
+    return res;
 }

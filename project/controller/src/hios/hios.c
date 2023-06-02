@@ -1,6 +1,6 @@
-//
-// Created by cmtheit on 23-6-1.
-//
+
+
+
 
 #include "hios.h"
 #include "../config/config.h"
@@ -12,18 +12,18 @@ hloop_t * hloop;
 extern char user_name[];
 extern char user_password[];
 
-static void on_connect() {
-    hio_read(sockio);
+static void on_connect(__attribute__((unused)) hio_t* io) {
+    hio_read_start(sockio);
     clr_write_msg(sockio, user_name);
     clr_write_msg(sockio, user_password);
 }
 
-static void on_close() {
+static void on_close(__attribute__((unused)) hio_t* io) {
     printf("连接关闭\n");
     hio_close(stdinio);
 }
 
-static void on_recv(hio_t* io, void * buf, int readbytes) {
+static void on_recv(__attribute__((unused)) hio_t* io, void * buf, int readbytes) {
     printf("%.*s", readbytes, (char*)buf);
     bool is_deli = true;
     for (int i = 0; i < SERVER_DELIMITER_BYTES; ++i) {
@@ -37,7 +37,7 @@ static void on_recv(hio_t* io, void * buf, int readbytes) {
     fflush(stdout);
 }
 
-static void on_stdin(hio_t * io, void * buf, int readbytes) {
+static void on_stdin(__attribute__((unused)) hio_t * io, void * buf, int readbytes) {
     hio_write(sockio, buf, readbytes);
 }
 

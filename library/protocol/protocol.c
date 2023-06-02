@@ -18,3 +18,7 @@ void server_write_msg(hio_t * hio, const char * msg) {
 void clr_write_msg(hio_t * hio, const char * msg) {
     write_msg(hio, msg, CLR_DELIMITER, CLR_DELIMITER_BYTES);
 }
+
+void cle_write_msg(hio_t * hio, const char * msg) {
+    write_msg(hio, msg, CLE_DELIMITER, CLE_DELIMITER_BYTES);
+}

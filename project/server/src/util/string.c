@@ -1,13 +1,7 @@
-
-
-
-
 #include "string.h"
 #include <stdlib.h>
 #include <ctype.h>
 #include <limits.h>
-
-
 
 char ** split(char * string) {
     size_t seg_num = 1;

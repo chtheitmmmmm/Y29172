@@ -1,7 +1,3 @@
-
-
-
-
 #ifndef SERVER_EVENT_H
 #define SERVER_EVENT_H
 

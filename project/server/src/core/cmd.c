@@ -1,7 +1,3 @@
-
-
-
-
 #include "cmd.h"
 #include "session.h"
 #include "server.h"
@@ -25,7 +21,6 @@ static int attack_id = -1;
 CmdInitResult cmd_init() {
     CmdInitResult res = result_new_ok(0);
     memset(&cmds, 0, sizeof(cmds));
-    hevent_t ev;
     for (int i = 0; i < CMD_NUM; ++i) {
         hevent_t * ev = &cmds[i].ev;
         memset(ev, 0, sizeof(hevent_t));
@@ -61,7 +56,6 @@ CmdInitResult cmd_init() {
                 break;
         }
     }
-    ev.cb = on_cmd_help;
     return res;
 }
 

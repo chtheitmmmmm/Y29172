@@ -1,7 +1,3 @@
-
-
-
-
 #include "init.h"
 #include "../config/config.h"
 #include <argparse/argparse.h>

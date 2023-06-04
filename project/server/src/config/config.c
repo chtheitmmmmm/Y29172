@@ -1,7 +1,3 @@
-
-
-
-
 #include "config.h"
 #include "../util/printlog.h"
 #include <chalk.c/chalk.h>

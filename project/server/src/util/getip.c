@@ -13,9 +13,8 @@
 static int is_internal_ip(const char* ip) {
     struct in_addr addr;
     inet_pton(AF_INET, ip, &addr);
-
-    unsigned int network = ntohl(addr.s_addr) >> 24;
-    return (network == 10) || (network == 172 && (addr.s_addr >> 20 & 0xF) == 16) || (network == 192 && (addr.s_addr >> 16 & 0xFF) == 168);
+    unsigned int network = ntohl(addr.s_addr) >> 16;
+    return (network == 0xC0A8);
 }
 
 void getip(char * buf) {

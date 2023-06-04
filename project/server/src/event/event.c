@@ -1,7 +1,3 @@
-
-
-
-
 #include "event.h"
 #include "../config/config.h"
 #include "../util/printlog.h"
@@ -18,7 +14,6 @@ GlobalEvents global_events = {
 
 static void init_event_cb(int, short, void *);  // called when init_event triggered
 static void sigint_event_cb(int, short, void *); // called when receive a SIGINT signal
-static void session_establish_event_cb(int, short, void *); // called when session established.
 
 void global_event_loop() {
     event_base_loop(global_events.event_base, EVLOOP_NO_EXIT_ON_EMPTY);
